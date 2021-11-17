@@ -13,7 +13,7 @@ import torch
 from torch.nn import Module, Parameter, init
 from torch.nn import Conv2d, Linear, BatchNorm1d, BatchNorm2d
 from torch.nn import ConvTranspose2d
-from complexFunctions import (
+from .complexFunctions import (
     complex_relu,
     complex_tanh,
     complex_sigmoid,
