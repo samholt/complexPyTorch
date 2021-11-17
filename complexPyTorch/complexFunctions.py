@@ -8,6 +8,9 @@
 from torch.nn.functional import relu, max_pool2d, avg_pool2d, dropout, dropout2d, interpolate, sigmoid, tanh
 import torch
 
+TORCH_FLOAT_DATATYPE = torch.double
+TORCH_COMPLEX_DATATYPE = torch.cdouble
+
 
 def complex_matmul(A, B):
     '''
@@ -15,7 +18,7 @@ def complex_matmul(A, B):
     '''
     outp_real = torch.matmul(A.real, B.real) - torch.matmul(A.imag, B.imag)
     outp_imag = torch.matmul(A.real, B.imag) + torch.matmul(A.imag, B.real)
-    return outp_real.type(torch.complex64) + 1j * outp_imag.type(torch.complex64)
+    return outp_real.type(TORCH_COMPLEX_DATATYPE) + 1j * outp_imag.type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_avg_pool2d(input, *args, **kwargs):
@@ -24,7 +27,7 @@ def complex_avg_pool2d(input, *args, **kwargs):
     '''
     absolute_value_real = avg_pool2d(input.real, *args, **kwargs)
     absolute_value_imag = avg_pool2d(input.imag, *args, **kwargs)
-    return absolute_value_real.type(torch.complex64) + 1j * absolute_value_imag.type(torch.complex64)
+    return absolute_value_real.type(TORCH_COMPLEX_DATATYPE) + 1j * absolute_value_imag.type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_normalize(input):
@@ -34,29 +37,29 @@ def complex_normalize(input):
     real_value, imag_value = input.real, input.imag
     real_norm = (real_value - real_value.mean()) / real_value.std()
     imag_norm = (imag_value - imag_value.mean()) / imag_value.std()
-    return real_norm.type(torch.complex64) + 1j * imag_norm.type(torch.complex64)
+    return real_norm.type(TORCH_COMPLEX_DATATYPE) + 1j * imag_norm.type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_relu(input):
-    return relu(input.real).type(torch.complex64) + 1j * relu(input.imag).type(torch.complex64)
+    return relu(input.real).type(TORCH_COMPLEX_DATATYPE) + 1j * relu(input.imag).type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_sigmoid(input):
-    return sigmoid(input.real).type(torch.complex64) + 1j * sigmoid(input.imag).type(torch.complex64)
+    return sigmoid(input.real).type(TORCH_COMPLEX_DATATYPE) + 1j * sigmoid(input.imag).type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_tanh(input):
-    return tanh(input.real).type(torch.complex64) + 1j * tanh(input.imag).type(torch.complex64)
+    return tanh(input.real).type(TORCH_COMPLEX_DATATYPE) + 1j * tanh(input.imag).type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_opposite(input):
-    return -(input.real).type(torch.complex64) + 1j * (-(input.imag).type(torch.complex64))
+    return -(input.real).type(TORCH_COMPLEX_DATATYPE) + 1j * (-(input.imag).type(TORCH_COMPLEX_DATATYPE))
 
 
 def complex_stack(input, dim):
     input_real = [x.real for x in input]
     input_imag = [x.imag for x in input]
-    return torch.stack(input_real, dim).type(torch.complex64) + 1j * torch.stack(input_imag, dim).type(torch.complex64)
+    return torch.stack(input_real, dim).type(TORCH_COMPLEX_DATATYPE) + 1j * torch.stack(input_imag, dim).type(TORCH_COMPLEX_DATATYPE)
 
 
 def _retrieve_elements_from_indices(tensor, indices):
@@ -75,7 +78,7 @@ def complex_upsample(input, size=None, scale_factor=None, mode='nearest',
                             align_corners=align_corners, recompute_scale_factor=recompute_scale_factor)
     outp_imag = interpolate(input.imag, size=size, scale_factor=scale_factor, mode=mode,
                             align_corners=align_corners, recompute_scale_factor=recompute_scale_factor)
-    return outp_real.type(torch.complex64) + 1j * outp_imag.type(torch.complex64)
+    return outp_real.type(TORCH_COMPLEX_DATATYPE) + 1j * outp_imag.type(TORCH_COMPLEX_DATATYPE)
 
 
 def complex_upsample2(input, size=None, scale_factor=None, mode='nearest',
@@ -89,7 +92,7 @@ def complex_upsample2(input, size=None, scale_factor=None, mode='nearest',
     outp_angle = interpolate(angle, size=size, scale_factor=scale_factor, mode=mode,
                              align_corners=align_corners, recompute_scale_factor=recompute_scale_factor)
     return outp_abs \
-        * (torch.cos(angle).type(torch.complex64) + 1j * torch.sin(angle).type(torch.complex64))
+        * (torch.cos(angle).type(TORCH_COMPLEX_DATATYPE) + 1j * torch.sin(angle).type(TORCH_COMPLEX_DATATYPE))
 
 
 def complex_max_pool2d(input, kernel_size, stride=None, padding=0,
@@ -107,21 +110,21 @@ def complex_max_pool2d(input, kernel_size, stride=None, padding=0,
         return_indices=True
     )
     # performs the selection on the absolute values
-    absolute_value = absolute_value.type(torch.complex64)
+    absolute_value = absolute_value.type(TORCH_COMPLEX_DATATYPE)
     # retrieve the corresonding phase value using the indices
     # unfortunately, the derivative for 'angle' is not implemented
     angle = torch.atan2(input.imag, input.real)
     # get only the phase values selected by max pool
     angle = _retrieve_elements_from_indices(angle, indices)
     return absolute_value \
-        * (torch.cos(angle).type(torch.complex64) + 1j * torch.sin(angle).type(torch.complex64))
+        * (torch.cos(angle).type(TORCH_COMPLEX_DATATYPE) + 1j * torch.sin(angle).type(TORCH_COMPLEX_DATATYPE))
 
 
 def complex_dropout(input, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part,
     # this not a clean solution!
-    #mask = torch.ones_like(input).type(torch.float32)
-    mask = torch.ones(*input.shape, dtype=torch.float32)
+    #mask = torch.ones_like(input).type(TORCH_FLOAT_DATATYPE)
+    mask = torch.ones(*input.shape, dtype=TORCH_FLOAT_DATATYPE)
     mask = dropout(mask, p, training) * 1 / (1 - p)
     mask.type(input.dtype)
     return mask * input
@@ -130,7 +133,7 @@ def complex_dropout(input, p=0.5, training=True):
 def complex_dropout2d(input, p=0.5, training=True):
     # need to have the same dropout mask for real and imaginary part,
     # this not a clean solution!
-    mask = torch.ones(*input.shape, dtype=torch.float32)
+    mask = torch.ones(*input.shape, dtype=TORCH_FLOAT_DATATYPE)
     mask = dropout2d(mask, p, training) * 1 / (1 - p)
     mask.type(input.dtype)
     return mask * input
